@@ -1,0 +1,34 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="wUDSlnhzwO5cUAxV7Eql">
+    <mxGraphModel dx="1414" dy="778" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="S9xtnQWW3qivG_twg9RA-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" value="Non-Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="80" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" value="First Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="320" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" value="Loyal Successful Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" value="Disloyal Successful Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="300" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" value="Loyal Unsuccessful Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="480" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;" value="Disloyal Unsuccessful Breeder" vertex="1">
+          <mxGeometry height="60" width="120" x="480" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d8764;fontColor=#ffffff;strokeColor=#3A5431;" value="Skipped" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="S9xtnQWW3qivG_twg9RA-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e51400;fontColor=#ffffff;strokeColor=#B20000;" value="Dead" vertex="1">
+          <mxGeometry height="60" width="120" x="120" y="180" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
