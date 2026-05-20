@@ -32,8 +32,32 @@ kap <- array(0.2,dim=c(length(states)))
 rho <- array(0.5,dim=c(length(states)))
 gam <- array(0.8,dim=c(length(states)))
 
-c("N","N","N","B1","LB","LB","0","L_B_","0")
+test <- rbind(c("N","N","N","B1","LB","LB","0","L_B_","0"),
+              c("N","N","N","B1","LB","LB","0","L_B_","0"))
+il(test,phi,psi)
 
+# calculate raw likelihood to test against
+2*(log(phi[1]*(1-rho[1])) + # first N->N
+  log(phi[1]*(1-rho[1])) + # second N->N
+  log(phi[1]*rho[1]) + # third N->B1
+  log(phi[2]*(1-kap[2])*(1-delt[2])*gam[2]) + # fourth B1->LB
+  log(phi[3]*(1-kap[3])*(1-delt[3])*gam[3]) + # fifth LB->LB
+  log(phi[3]*kap[3]) + # sixth LB->S
+  log(phi[7]*delt[7]*(1-gam[7])) + # seventh S->L_B_
+  log(phi[6]*kap[6]+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
+il(test,phi,psi) # slightly over so its double counting
+
+test_il <- c(log(phi[1]*(1-rho[1])), # first N->N
+              log(phi[1]*(1-rho[1])), # second N->N
+              log(phi[1]*rho[1]), # third N->B1
+              log(phi[2]*(1-kap[2])*(1-delt[2])*gam[2]), # fourth B1->LB
+              log(phi[3]*(1-kap[3])*(1-delt[3])*gam[3]), # fifth LB->LB
+              log(phi[3]*kap[3]), # sixth LB->S
+              log(phi[7]*delt[7]*(1-gam[7])), # seventh S->L_B_
+              log(phi[6]*kap[6]+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
+sum(test_il)
+log(Pr_r0(6,phi,psi))
+test_il[8]
 
 
 psi <- make.psi(delt,kap,rho,gam)
@@ -48,23 +72,19 @@ struc <- list("phi"=list(1,2:length(states)),
               "gam"=list(1:length(states)))
 ll.il(theta,1:2,3,4,5,6,struc,ch)
 
+timer(op <- optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,
+            rho.ind=5,gam.ind=6,struc=struc,ch=ch,
+            control=list(fnscale=-1)))
 
 
-# library(plyr, include.only = c("count"))
-# uch <- count(matrix_AUK)
-# dch <- cbind(uch,"problem"=rep(FALSE,nrow(uch)))
-# multiple_zeros <- rep(0,15)
-# for(i in 1:nrow(uch)){
-#   detected_states <- which(uch[i,1:16]!=0)
-#   if(length(detected_states)>1){
-#     for(t in length(detected_states):2){
-#       counter <- detected_states[t]-detected_states[t-1]-1
-#       if(counter>1){
-#         multiple_zeros[counter] <- multiple_zeros[counter] + 1
-#         dch[i,18] <- TRUE
-#       }
-#     } 
-#   }
-# }
-# sum(dch$problem)/nrow(dch)
+
+# want to see how many individuals are ringed at each time
+ni <- rep(0,ncol(uch)-1) # number of individuals
+for(i in 1:nrow(uch)){
+  ni[which(uch[i,1:16]!=0)[1]] <- ni[which(uch[i,1:16]!=0)[1]] + uch[i,17]
+}
+mean(ni) # 54.8 -> 55 individuals roughly each time
+
+
+
 

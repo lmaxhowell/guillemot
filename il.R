@@ -11,7 +11,8 @@ Pr_r0s <- function(r,s,phi,psi){
 
 Pr_r0 <- function(r,phi,psi){
   skip <- which(row.names(psi)=="S")
-  prob <- phi[r]*psi[r,skip]*(1-phi[skip]) + (1-phi[skip])
+  # prob <- phi[r]*psi[r,skip]*(1-phi[skip]) + (1-phi[skip]) # this is the OG from the document
+  prob <- phi[r]*psi[r,skip] + (1-phi[skip]) # this is what I thought
   return(prob)
 }
 
@@ -121,6 +122,7 @@ make.psi <- function(delta,kap,rho,gam){
 
 # find all the state transitions in the relevant capture history
 find.transitions <- function(ch){
+  Time <- length(ch)
   where <- which(ch!="0")
   df <- as.data.frame(array(NA,dim=c(max(length(where)-1,1),4))) # want it to be a character df but full of nothing
   colnames(df) <- c("r","s","t_r","t_s") # state r, state s, time at state r, time at states
@@ -135,7 +137,12 @@ find.transitions <- function(ch){
   }else{ # more than one observation
     for(t in 1:(length(where)-1)){ # go through all the states
       df[t,] <- list(ch[where[t]],ch[where[t+1]],where[t],where[t+1])
-    } # end for t in 1:length(where)
+    } # end for t in 1:length(where)-1
+    lw <- where[length(where)] # the last element of where
+    if(lw!=Time){ # if the last place that a state is observed ISNT the last time
+      df <- rbind(df,
+                  list(ch[lw],"0",lw,lw+1))
+    }
     return(df)
   } # end else more than one observation
 }
@@ -154,7 +161,8 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
     # this function just means we can call log(prob)
     # without worrying about the errors this can cause
     if(length(prob)==0){
-      print(c(parent.frame()$i,parent.frame()$t,parent.frame()$ch))
+      print(c(parent.frame()$i,parent.frame()$t,parent.frame()$Time))
+      View(parent.frame()$transitions)
     }
     if(prob<0){
       return(0)
@@ -192,18 +200,25 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
           next # then we just skip it
         }else if((transitions[t,4]-transitions[t,3])==1){ # aka are the states next to each other and not a state in the final time
           current_state_index <- which(states==transitions[t,1]) # what number is the current state
-          next_state_index <- which(states==transitions[t,2]) # what number is the next state
-          ll_i[i] <- ll_i[i] + Indicator(Pr_rs(current_state_index,next_state_index,phi,psi))
+          # need to deal with if the transition is the final one, a state to zero
+          if(transitions[t,2]=="0"){ # skips shouldnt end up in this loop because they wont have sequential times
+            ll_i[i] <- ll_i[i] + Indicator(Pr_r0(current_state_index,phi,psi))
+          }else{
+            next_state_index <- which(states==transitions[t,2]) # what number is the next state
+            ll_i[i] <- ll_i[i] + Indicator(Pr_rs(current_state_index,next_state_index,phi,psi))
+          } # end else
         }else if((transitions[t,4]-transitions[t,3])==2 & transitions[t,1]!="N"){ # we have a skipped a time and it was previously breeding
           current_state_index <- which(states==transitions[t,1]) # what number is the current state
           next_state_index <- which(states==transitions[t,2]) # what number is the next state
           ll_i[i] <- ll_i[i] + Indicator(Pr_r0s(current_state_index,next_state_index,phi,psi))
-        }else if(((transitions[t,4]-transitions[t,3])==2 & transitions[t,1]=="N") | ((transitions[t,4]-transitions[t,3])>2)){
+        }else if(((transitions[t,4]-transitions[t,3])==2 & transitions[t,1]=="N") | 
+                 ((transitions[t,4]-transitions[t,3])>2)){
           # we have a skipped a time and it was NOT previously breeding OR
-          # we have skipped multiple times (and so theoretically should not be breed)
+          # we have skipped multiple times (and so theoretically should not be breeding) OR
           current_state_index <- which(states==transitions[t,1]) # what number is the current state
           ll_i[i] <- ll_i[i] + Indicator(Pr_r0(current_state_index,phi,psi))
         }
+        # print(ll_i)
       } # end for t in transitions
     } # end else ch has multiple observations
   } # end i
