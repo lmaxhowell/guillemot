@@ -44,7 +44,7 @@ il(test,phi,psi)
   log(phi[3]*(1-kap[3])*(1-delt[3])*gam[3]) + # fifth LB->LB
   log(phi[3]*kap[3]) + # sixth LB->S
   log(phi[7]*delt[7]*(1-gam[7])) + # seventh S->L_B_
-  log(phi[6]*kap[6]+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
+  log(phi[6]*kap[6]*(1-phi[7])+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
 il(test,phi,psi) # slightly over so its double counting
 
 test_il <- c(log(phi[1]*(1-rho[1])), # first N->N
@@ -54,7 +54,7 @@ test_il <- c(log(phi[1]*(1-rho[1])), # first N->N
               log(phi[3]*(1-kap[3])*(1-delt[3])*gam[3]), # fifth LB->LB
               log(phi[3]*kap[3]), # sixth LB->S
               log(phi[7]*delt[7]*(1-gam[7])), # seventh S->L_B_
-              log(phi[6]*kap[6]+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
+              log(phi[6]*kap[6]*(1-phi[7])+(1-phi[6]))) # eighth L_B_->0 could have skipped or died?
 sum(test_il)
 log(Pr_r0(6,phi,psi))
 test_il[8]
@@ -74,7 +74,37 @@ ll.il(theta,1:2,3,4,5,6,struc,ch)
 
 timer(op <- optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,
             rho.ind=5,gam.ind=6,struc=struc,ch=ch,
-            control=list(fnscale=-1)))
+            control=list(fnscale=-1),hessian=TRUE)) # Time difference of 3.178106 mins, convergence 1
+timer(op2 <- optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,
+                  rho.ind=5,gam.ind=6,struc=struc,ch=ch,
+                  control=list(fnscale=-1),method="BFGS",hessian=TRUE)) # Time difference of 2.249783 mins, convergence 0
+op$convergence
+c("phi1","phiA","delta","kappa","rho","gamma")
+logistic(op$par)
+op$hessian
+diag(solve(-op$hessian))
+
+# adding time dependance to function
+Time <- ncol(ch)
+struc <- list("phi"=list("state"=list(1,2:length(states)),"time"=list(1:Time)),
+              "delt"=list("state"=list(1:length(states)),"time"=list(1:Time)),
+              "kap"=list("state"=list(1:length(states)),"time"=list(1:Time)),
+              "rho"=list("state"=list(1:length(states)),"time"=list(1:Time)),
+              "gam"=list("state"=list(1:length(states)),"time"=list(1:Time)))
+ll.il(theta,1:2,3,4,5,6,struc,ch)
+theta2 <- logit(c(0.3,0.7,0.3,0.2,0.7,0.5,0.8))
+struc2 <- list("phi"=list("state"=list(1,2:length(states)),"time"=list(1:Time)),
+              "delt"=list("state"=list(1:length(states)),"time"=list(1:Time)),
+              "kap"=list("state"=list(1:length(states)),"time"=list(1:8,9:Time)),
+              "rho"=list("state"=list(1:length(states)),"time"=list(1:Time)),
+              "gam"=list("state"=list(1:length(states)),"time"=list(1:Time)))
+ll.il(theta2,1:2,3,4:5,6,7,struc2,ch)
+timer(op3 <- optim(theta2,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4:5,
+                   rho.ind=6,gam.ind=7,struc=struc2,ch=ch,
+                   control=list(fnscale=-1),method="BFGS",hessian=TRUE)) # Time difference of 1.921875 mins, convergence 0
+op3$convergence
+logistic(op3$par)
+diag(solve(-op3$hessian))
 
 
 
