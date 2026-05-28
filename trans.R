@@ -26,3 +26,27 @@ untrans <- function(theta,tme,state){
   }
   return(param)
 }
+
+untrans2 <- function(theta,age,tme,state){
+  # age is the age structure of what to keep constant
+  # tme is the time structure of what to keep constant
+  # both should be a list of indices
+  # so list(1,2,3:Time) for age means that age is specific
+  # to first years, second years and then constant after
+  # and the same applies to first years
+  Time <- length(unlist(tme))
+  Age <- length(unlist(age))
+  States <- length(unlist(state))
+  param <- array(dim=c(Time,Age,States))
+  for(s in 1:length(state)){
+    for(t in 1:length(tme)){
+      for(a in 1:length(age)){
+        param[tme[[t]],age[[a]],state[[s]]] <- theta[1]
+        if(length(theta)>1){
+          theta <- theta[2:length(theta)]
+        }
+      }
+    }
+  }
+  return(param)
+}
