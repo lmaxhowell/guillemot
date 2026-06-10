@@ -58,11 +58,11 @@ dat.simulate <- function(phi,delt,kap,rho,gam,ups,ni,seed=0){
   return(df)
 }
 
-dat.simulate2 <- function(phi,delt,kap,rho,gam,ups,ni,seed=0){
+dat.simulate2 <- function(phi,delt,kap,rho,gam,eps,ni,seed=0){
   # ni should be a list of vectors of starting ages, the length of each vector
   # being the number of individuals released that time
-  psi <- make.psi2(delt,kap,rho,gam,ups)
-  states <- c("N","N_","B1","LB","L_B","LB_","L_B_","S")
+  psi <- make.psi(delt,kap,rho,gam,eps)
+  states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
   
   Time <- length(ni)+1
   # ni is the number of individuals ringed at each occasion
@@ -113,16 +113,36 @@ dat.simulate2 <- function(phi,delt,kap,rho,gam,ups,ni,seed=0){
           # if(previous.state %in% states[c(2,8)]){
           #   df[i+addtoi,t-1] <- "0" # replace the current "S" or "N_" with "0"
           # }
-          wdf <- tail(which(df[i+addtoi,] %in% states[-c(2,8)]),1) # what time did the last state occur that wasnt "S" or "N_"
-          if(wdf<t){
-            df[i+addtoi,(wdf+1):t] <- "0" # replace those "S" or "N_" with "0"
-          }
           break # this is the skip to the next individual
         }
       } # end for every t
+      wdf <- tail(which(df[i+addtoi,1:Time] %in% states[-c(2,8)]),1) # what time did the last state occur that wasnt "S" or "N_"
+      wdf2 <- tail(which(df[i+addtoi,1:Time] %in% states[c(2,8)]),1) # what time did the last state occur that was "S" or "N_"
+      if(length(wdf2)>0){
+        if(wdf2>wdf){
+          df[i+addtoi,(wdf+1):Time] <- "0" # replace those "S" or "N_" with "0"
+        } # end if wdf2>wdf
+      } # end if wdf2>0
     } # end for every individuals
   } # end for every cohort release rn
-  df[,Time][df[,Time]=="S"] <- "0" # remove any final skips that dont get written over by the bird dying
-  df[,Time][df[,Time]=="N_"] <- "0" # remove any final skips that dont get written over by the bird dying
   return(df)
+}
+
+dat.sim.wrap <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,ni,seed=0){
+
+  phi <- untrans(logistic(theta[phi.ind]),struc$phi$age,struc$phi$time,struc$phi$state)
+  delt <- untrans(logistic(theta[delt.ind]),struc$delt$age,struc$delt$time,struc$delt$state)
+  kap <- untrans(logistic(theta[kap.ind]),struc$kap$age,struc$kap$time,struc$kap$state)
+  rho <- untrans(logistic(theta[rho.ind]),struc$rho$age,struc$rho$time,struc$rho$state)
+  gam <- untrans(logistic(theta[gam.ind]),struc$gam$age,struc$gam$time,struc$gam$state)
+  eps <- untrans(logistic(theta[eps.ind]),struc$eps$age,struc$eps$time,struc$eps$state)
+  
+  # psi <- make.psi(delt,kap,rho,gam,eps)
+  # for(i in 1:16){
+  #   print(sum(psi[,,1,1]==psi[,,i,1])==(prod(dim(psi[,,1,1]))))
+  # }
+  
+  
+  dat <- dat.simulate2(phi,delt,kap,rho,gam,eps,ni,seed)
+  return(dat)
 }
