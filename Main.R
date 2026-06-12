@@ -666,6 +666,10 @@ op <- optim(theta,ll.il,phi.ind=1,delt.ind=2,kap.ind=3,rho.ind=4,gam.ind=5,
 op$convergence
 logistic(op$par)
 sqrt(diag(solve(-op$hessian)))
+write.csv(data.frame("par"=c("phi","delta","kappa","rho","gamma","epsilon"),
+           "MLE"=logistic(op$par),
+           "trueval"=logistic(theta),
+           "sd"=sqrt(diag(solve(-op$hessian)))),file="sim.data.values.cvs")
 write.csv(sim.dat,file="sim.data.csv")
 
 # delta is divorce rate
