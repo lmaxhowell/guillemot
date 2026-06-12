@@ -961,10 +961,11 @@ Pr_r0 <- function(r,t,a,phi,psi){
   skip <- which(row.names(psi)=="S")
   if(r %in% 3:7){
     prob <- phi[t,a,r]*psi[r,skip,t,a]*(1-phi[t+1,a+1,skip]) + (1-phi[t,a,r])
-  }else if(r==1){
+  # }else if(r==1){
+  }else if(r %in% 1:2){
     prob <- Chi(r,t,a,phi,psi)
   }else{
-    stop(print("I shouldnt be here",r,t,a))
+    # stop(print("I shouldnt be here",r,t,a))
   }
   if(!exists("prob")){
     print(c(r,t,a,as.vector(parent.frame()$ch),as.vector(parent.frame()$transitions)))

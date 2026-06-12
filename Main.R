@@ -584,9 +584,9 @@ ggplot(df.sim2,aes(par,MLE,col=par)) + geom_boxplot() + geom_point(data=df.true2
 uch[153,]
 Chi(1,13,6,phi,psi)
 sum((1-phi[13,6,1]),
-    phi[13,6,1]*psi[1,2,13,6]*(1-phi[14,2,7]),
-    phi[13,6,1]*psi[1,2,13,6]*phi[14,2,7]*psi[2,2,14,7]*(1-phi[15,8,2]),
-    phi[13,6,1]*psi[1,2,13,6]*phi[14,2,7]*psi[2,2,14,7]*phi[15,8,2]*psi[2,2,15,8])
+    phi[13,6,1]*psi[1,2,13,6]*(1-phi[14,7,2]),
+    phi[13,6,1]*psi[1,2,13,6]*phi[14,7,2]*psi[2,2,14,7]*(1-phi[15,8,2]),
+    phi[13,6,1]*psi[1,2,13,6]*phi[14,7,2]*psi[2,2,14,7]*phi[15,8,2]*psi[2,2,15,8])
 
 test.l <- c(phi[8,1,1]*psi[1,2,8,1], # N -> E
             phi[9,2,2]*psi[2,2,9,2], # E -> E
@@ -618,5 +618,63 @@ load("guill.sim.RData")
 df.true <- data.frame("par"=c("phi1","phi2","delta","kappa","rho","gamma","epsilon"),
                       "MLE"=logistic(theta))
 ggplot(df.sim,aes(par,MLE,col=par)) + geom_boxplot() + geom_point(data=df.true,aes(par,MLE),shape=5,col="black")
+df.true2 <- data.frame("par"=c("phi","delta","kappa","rho","gamma","epsilon"),
+                      "MLE"=logistic(theta[-1]))
+ggplot(df.sim2,aes(par,MLE,col=par)) + geom_boxplot() + geom_point(data=df.true2,aes(par,MLE),shape=5,col="black")
+
+
+########################################
+# trying the simulation with only data from breeders
+########################################
+sim.dat <- dat.sim.wrap(theta,1:2,3,4,5,6,7,struc,ni2,1330080468)
+sim.dat2 <- sim.dat[20,]
+for(i in 21:nrow(sim.dat)){
+  ifelse(states[3:7] %in% sim.dat[i,],sim.dat2 <- rbind(sim.dat2,sim.dat[i,]),next)
+}
+op <- optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,rho.ind=5,gam.ind=6,
+            eps.ind=7,struc=struc,ch=sim.dat2,control=list(fnscale=-1),method="BFGS")
+op$convergence
+logistic(op$par)
+
+op2 <- optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,rho.ind=5,gam.ind=6,
+            eps.ind=7,struc=struc,ch=mch,control=list(fnscale=-1),method="BFGS")
+op2$convergence
+logistic(op2$par)
+
+
+######################
+# check if gamma and delta are directly estimatable
+######################
+ni <- rep(0,ncol(uch)-1) # number of individuals
+for(i in 1:nrow(uch)){
+  ni[which(uch[i,1:16]!=0)[1]] <- ni[which(uch[i,1:16]!=0)[1]] + uch[i,17]
+}
+ni2 <- list()
+for(i in 1:(length(ni)-1)){
+  ni2[[i]] <- rep(1,ni[i])
+}
+theta <- logit(c(0.7,0.3,0.2,0.5,0.8,0.6))
+struc <- list("phi"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+              "delt"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+              "kap"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+              "rho"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+              "gam"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+              "eps"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))))
+sim.dat <- dat.sim.wrap(theta,1,2,3,4,5,6,struc,ni2,1330080468)
+op <- optim(theta,ll.il,phi.ind=1,delt.ind=2,kap.ind=3,rho.ind=4,gam.ind=5,
+            eps.ind=6,struc=struc,ch=sim.dat,control=list(fnscale=-1),method="BFGS",hessian=TRUE)
+op$convergence
+logistic(op$par)
+sqrt(diag(solve(-op$hessian)))
+write.csv(sim.dat,file="sim.data.csv")
+
+# delta is divorce rate
+# gamma is breeding success rate
+for(i in 1:nrow(sim.dat)){
+  if(sim.dat[i,]){
+    
+  }
+}
+
 
 

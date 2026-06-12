@@ -118,6 +118,8 @@ dat.simulate2 <- function(phi,delt,kap,rho,gam,eps,ni,seed=0){
       } # end for every t
       wdf <- tail(which(df[i+addtoi,1:Time] %in% states[-c(2,8)]),1) # what time did the last state occur that wasnt "S" or "N_"
       wdf2 <- tail(which(df[i+addtoi,1:Time] %in% states[c(2,8)]),1) # what time did the last state occur that was "S" or "N_"
+      # wdf <- tail(which(df[i+addtoi,1:Time] %in% states[-c(8)]),1) # what time did the last state occur that wasnt "S" or "N_"
+      # wdf2 <- tail(which(df[i+addtoi,1:Time] %in% states[c(8)]),1) # what time did the last state occur that was "S" or "N_"
       if(length(wdf2)>0){
         if(wdf2>wdf){
           df[i+addtoi,(wdf+1):Time] <- "0" # replace those "S" or "N_" with "0"

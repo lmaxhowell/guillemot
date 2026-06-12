@@ -17,14 +17,22 @@ if(l==1){
     ni2[[i]] <- rep(1,ni[i])
   }
   
-  struc <- list("phi"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1,2:length(states))),
+  struc <- list("phi"=list("age"=list(1,2:Time),"time"=list(1:Time),"state"=list(1:length(states))),
                  "delt"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
                  "kap"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
                  "rho"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
                  "gam"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
                  "eps"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))))
+  struc2 <- list("phi"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+                "delt"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+                "kap"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+                "rho"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+                "gam"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))),
+                "eps"=list("age"=list(1:Time),"time"=list(1:Time),"state"=list(1:length(states))))
+  
   
   theta <- logit(c(0.3,0.7,0.3,0.2,0.5,0.8,0.6))
+  theta2 <- logit(c(0.7,0.3,0.2,0.5,0.8,0.6))
   # phi3 <- untrans2(logistic(theta[1:2]),struc3$phi$age,struc3$phi$time,struc3$phi$state)
   # delt3 <- untrans2(logistic(theta[3]),struc3$delt$age,struc3$delt$time,struc3$delt$state)
   # kap3 <- untrans2(logistic(theta[4]),struc3$kap$age,struc3$kap$time,struc3$kap$state)
@@ -40,14 +48,22 @@ if(l==1){
   cores <- 50
   sim.dat <- mclapply(1:n,function(x) dat.sim.wrap(theta,phi.ind=1:2,delt.ind=3,kap.ind=4,rho.ind=5,gam.ind=6,
                                                     eps.ind=7,struc,ni2,seeds[x]),mc.cores=cores)
+  sim.dat2 <- mclapply(1:n,function(x) dat.sim.wrap(theta2,phi.ind=1,delt.ind=2,kap.ind=3,rho.ind=4,gam.ind=5,
+                                                    eps.ind=6,struc2,ni2,seeds[x]),mc.cores=cores)
   
   timer(op.n <- mclapply(1:n,function(x) optim(theta,ll.il,phi.ind=1:2,delt.ind=3,kap.ind=4,rho.ind=5,gam.ind=6,
                                                 eps.ind=7,struc=struc,ch=sim.dat[[x]],control=list(fnscale=-1),
+                                                method="BFGS"),mc.cores=cores))
+  timer(op.n2 <- mclapply(1:n,function(x) optim(theta2,ll.il,phi.ind=1,delt.ind=2,kap.ind=3,rho.ind=4,gam.ind=5,
+                                                eps.ind=6,struc=struc2,ch=sim.dat2[[x]],control=list(fnscale=-1),
                                                 method="BFGS"),mc.cores=cores))
   
   df.sim <- data.frame("par"=rep(c("phi1","phi2","delta","kappa","rho","gamma","epsilon"),n),
                         "MLE"=c(sapply(1:n,function(x) logistic(op.n[[x]]$par))),
                         "convergence"=rep(sapply(1:n,function(x) op.n[[x]]$convergence),each=7))
+  df.sim2 <- data.frame("par"=rep(c("phi","delta","kappa","rho","gamma","epsilon"),n),
+                        "MLE"=c(sapply(1:n,function(x) logistic(op.n2[[x]]$par))),
+                        "convergence"=rep(sapply(1:n,function(x) op.n2[[x]]$convergence),each=6))
   
-  save(df.sim,file="guill.sim.RData")
+  save(df.sim,df.sim2,file="guill.sim.RData")
 }
