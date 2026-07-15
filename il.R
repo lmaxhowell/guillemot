@@ -844,8 +844,8 @@ make.psi <- function(delta,kap,rho,gam,epsilon){
   Time <- dim(delta)[1]
   Ages <- dim(delta)[2]
   # print(sapply(list(delta,kap,rho,gam,epsilon),ncol))
-  if(ncol(kap)!=Time | ncol(rho)!=Time | ncol(gam)!=Time | ncol(epsilon)!=Time){
-    stop("delta,kappa,rho, gamma and epsilon must all have the same number of columns, corresponding to time")
+  if(nrow(kap)!=Time | nrow(rho)!=Time | nrow(gam)!=Time | nrow(epsilon)!=Time){
+    stop("delta,kappa,rho, gamma and epsilon must all have the same number of rows, corresponding to time")
   }
   psi <- array(0,dim=c(length(states),length(states),Time,Ages))
   for(t in 1:Time){
@@ -855,35 +855,35 @@ make.psi <- function(delta,kap,rho,gam,epsilon){
       row.names(psi) <- states
       colnames(psi) <- states
       # this is if these rows depend on the ROWS theyre in
-      # for(i in 4:8){
-      #   psi[i-1,,t,a] <- c(0,0,0,
-      #                      (1-kap[t,a,i])*(1-delta[t,a,i])*gam[t,a,i],
-      #                      (1-kap[t,a,i])*delta[t,a,i]*gam[t,a,i],
-      #                      (1-kap[t,a,i])*(1-delta[t,a,i])*(1-gam[t,a,i]),
-      #                      (1-kap[t,a,i])*delta[t,a,i]*(1-gam[t,a,i]),
-      #                      kap[t,a,i])
-      # }
-      # psi[8,,t,a] <- c(0,0,0,
-      #                  (1-delta[t,a,8])*gam[t,a,8],
-      #                  delta[t,a,8]*gam[t,a,8],
-      #                  (1-delta[t,a,8])*(1-gam[t,a,8]),
-      #                  delta[t,a,8]*(1-gam[t,a,8]),
-      #                  0)
-      # this is if these rows depend on the columns theyre in
       for(i in 4:8){
         psi[i-1,,t,a] <- c(0,0,0,
-                           (1-kap[t,a,4])*(1-delta[t,a,4])*gam[t,a,4],
-                           (1-kap[t,a,5])*delta[t,a,5]*gam[t,a,5],
-                           (1-kap[t,a,6])*(1-delta[t,a,6])*(1-gam[t,a,6]),
-                           (1-kap[t,a,7])*delta[t,a,7]*(1-gam[t,a,7]),
-                           kap[t,a,8])
+                           (1-kap[t,a,i])*(1-delta[t,a,i])*gam[t,a,i],
+                           (1-kap[t,a,i])*delta[t,a,i]*gam[t,a,i],
+                           (1-kap[t,a,i])*(1-delta[t,a,i])*(1-gam[t,a,i]),
+                           (1-kap[t,a,i])*delta[t,a,i]*(1-gam[t,a,i]),
+                           kap[t,a,i])
       }
       psi[8,,t,a] <- c(0,0,0,
-                       (1-delta[t,a,4])*gam[t,a,4],
-                       delta[t,a,5]*gam[t,a,5],
-                       (1-delta[t,a,6])*(1-gam[t,a,6]),
-                       delta[t,a,7]*(1-gam[t,a,7]),
+                       (1-delta[t,a,8])*gam[t,a,8],
+                       delta[t,a,8]*gam[t,a,8],
+                       (1-delta[t,a,8])*(1-gam[t,a,8]),
+                       delta[t,a,8]*(1-gam[t,a,8]),
                        0)
+      # # this is if these rows depend on the columns theyre in
+      # for(i in 4:8){
+      #   psi[i-1,,t,a] <- c(0,0,0,
+      #                      (1-kap[t,a,4])*(1-delta[t,a,4])*gam[t,a,4],
+      #                      (1-kap[t,a,5])*delta[t,a,5]*gam[t,a,5],
+      #                      (1-kap[t,a,6])*(1-delta[t,a,6])*(1-gam[t,a,6]),
+      #                      (1-kap[t,a,7])*delta[t,a,7]*(1-gam[t,a,7]),
+      #                      kap[t,a,8])
+      # }
+      # psi[8,,t,a] <- c(0,0,0,
+      #                  (1-delta[t,a,4])*gam[t,a,4],
+      #                  delta[t,a,5]*gam[t,a,5],
+      #                  (1-delta[t,a,6])*(1-gam[t,a,6]),
+      #                  delta[t,a,7]*(1-gam[t,a,7]),
+      #                  0)
     }
   }
   return(psi)
@@ -895,13 +895,19 @@ find.transitions <- function(ch){ # need to add in age as component
   Time <- length(ch)
   where <- which(ch!="0")
   df <- as.data.frame(array(NA,dim=c(max(length(where)-1,1),5))) # want it to be a character df but full of nothing
+  # df <- as.data.frame(array(NA,dim=c(length(where),5))) # want it to be a character df but full of nothing
   colnames(df) <- c("r","s","t_r","t_s","age") # state r, state s, time at state r, time at states
   if(nrow(df)==1){ # if only one observation
     if(length(where)==1){ # if only one state observed
       df[1,] <- list(ch[ch!="0"],"0",where,where+1,age)
       return(df)
-    }else if(length(where)==2){ # the case where there is a state at the final time
+    }else if(length(where)==2 && where[2]==Time){ # the case where there is a state at the final time
       df[1,] <- list(ch[where[1]],ch[where[2]],where[1],where[2],age)
+      return(df)
+    }else if(length(where)==2 && where[2]!=Time){
+      df[1,] <- list(ch[where[1]],ch[where[2]],where[1],where[2],age)
+      lw <- where[2]
+      df <- rbind(df,list(ch[lw],"0",lw,lw+1,age+length(where)-1))
       return(df)
     }
   }else{ # more than one observation
@@ -949,6 +955,12 @@ Chi <- function(r,t,a,phi,psi){
   if(t==Time){
     return(1)
   }else{
+    # print(c(r,t,a))
+    # n <- 1
+    # while(is.null(parent.frame(n)$v)){
+    #   n <- n+1
+    # }
+    # print(parent.frame(n)$v[r,t,a])
     prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
     if(length(prob)==0){
       print(parent.frame(2)$ch)
@@ -960,7 +972,15 @@ Chi <- function(r,t,a,phi,psi){
 Pr_r0 <- function(r,t,a,phi,psi){
   skip <- which(row.names(psi)=="S")
   if(r %in% 3:7){
-    prob <- phi[t,a,r]*psi[r,skip,t,a]*(1-phi[t+1,a+1,skip]) + (1-phi[t,a,r])
+    if(t<(Time-1)){
+      prob <- phi[t,a,r]*psi[r,skip,t,a]*(1-phi[t+1,a+1,skip]) + (1-phi[t,a,r])
+    }else if(t==(Time-1)){
+      # if we are in a breeding state at Time-1 and then a zero at Time
+      # then they dont have to have died they could still be in the skipping state
+      # with no information about them being alive
+      prob <- phi[t,a,r]*psi[r,skip,t,a] + (1-phi[t,a,r])
+    }
+    # prob <- phi[t,a,r]*psi[r,skip,t,a]*(1-phi[t+1,a+1,skip]) + (1-phi[t,a,r])
   # }else if(r==1){
   }else if(r %in% 1:2){
     prob <- Chi(r,t,a,phi,psi)
@@ -989,11 +1009,16 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
     # without worrying about the errors this can cause
     if(length(prob)==0){
       print(c(parent.frame()$i,parent.frame()$t,parent.frame()$Time))
-      print(c("s",parent.frame()$current_state_index))
+      print(c("r",parent.frame()$current_state_index))
+      print(c("s",parent.frame()$next_state_index))
       print(c("t",parent.frame()$current_time))
       print(c("a",parent.frame()$current_age))
       print(parent.frame()$ch)
       View(parent.frame()$transitions)
+    }
+    if(!exists("prob") | is.na(prob)){
+      print(parent.frame()$ch)
+      print(parent.frame()$transitions)
     }
     if(prob<0){
       return(0)
@@ -1012,6 +1037,8 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
   # how many unique capture histories are there
   Individuals <- nrow(uch)
   ll_i <- rep(0,Individuals) # want to create an individual likelihood for each capture history
+  # L1 <- rep(0,Individuals)
+  # L2 <- rep(0,Individuals)
   for(i in 1:Individuals){
     ch <- uch[i,1:(Time+1)] # the current capture history we are looking at
     # can rename ch to be "the current ch" because we no longer need ch, just uch
@@ -1024,10 +1051,18 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
       current_time <- transitions[1,3]
       if(transitions[1,4]==(Time+1)){ # if this occurs at the final time...do nothing
         next
+      }else if(transitions[1,2]!="0"){
+        current_state_index <- which(states==current_state) # what number is the current state
+        current_age <- transitions[1,5]
+        next_state_index <- which(states==transitions[1,2]) # what number is the next state
+        # L1[i] <- L1[i] + Indicator(Pr_rs(current_state_index,next_state_index,current_time,current_age,phi,psi))
+        ll_i[i] <- ll_i[i] + Indicator(Pr_rs(current_state_index,next_state_index,current_time,current_age,phi,psi))
       }else{ # else we are in a Pr_r0 situation
         current_state_index <- which(states==current_state) # what number is the current state
         current_age <- transitions[1,5]
+        # print(c(current_state_index,current_time,current_age,dim(phi),dim(psi)))
         # print(Indicator(Pr_r02(current_state_index,current_time,current_age,phi,psi)))
+        # L2[i] <- L2[i] + Indicator(Pr_r0(current_state_index,current_time,current_age,phi,psi))
         ll_i[i] <- ll_i[i] + Indicator(Pr_r0(current_state_index,current_time,current_age,phi,psi))
       }
     }else{ # therefore ch has multiple observations
@@ -1040,10 +1075,13 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
           current_age <- transitions[t,5]
           # need to deal with if the transition is the final one, a state to zero
           if(transitions[t,2]=="0"){
+            # L2[i] <- L2[i] + Indicator(Pr_r0(current_state_index,current_time,current_age,phi,psi))
+            # print(transitions[nrow(transitions),])
             ll_i[i] <- ll_i[i] + Indicator(Pr_r0(current_state_index,current_time,current_age,phi,psi))
           }else{
             next_state_index <- which(states==transitions[t,2]) # what number is the next state
             # print(c(Pr_rs2(current_state_index,next_state_index,current_time,current_age,phi,psi),current_state_index,next_state_index,current_time,current_age))
+            # L1[i] <- L1[i] + Indicator(Pr_rs(current_state_index,next_state_index,current_time,current_age,phi,psi))
             ll_i[i] <- ll_i[i] + Indicator(Pr_rs(current_state_index,next_state_index,current_time,current_age,phi,psi))
           } # end else
         } # all the states should now be next to each other so commented out the next bit
@@ -1065,10 +1103,13 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
       } # end for t in transitions
     } # end else ch has multiple observations
   } # end i
+  # LL1 <- sum((uch$freq)*(L1))
+  # LL2 <- sum((uch$freq)*(L2))
   ll <- sum((uch$freq)*(ll_i)) # multiply the log-likelihood for each unique capture history
   # by how many times that capture history occurs and sum it up
   # to make the multinomial loglikelihood
   return(ll)
+  # return(c(ll,LL1,LL2,LL1+LL2))
 }
 
 ll.il <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,ch){
@@ -1088,6 +1129,81 @@ ll.il <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,c
   
   return(ll)
 }
+
+# il <- function(ch,phi,psi){
+#   Indicator <- function(prob){
+#     # a function that checks if the probability pu into it will
+#     # "cause problems" in the likelihood - i.e. if we log
+#     # this probability will it be infinite and cause the whole ll
+#     # to be infinite as a result
+#     # or has a small amount of numerical error crept in
+#     # and made a probability negative?
+#     # in which case just set it to zero
+#     # will add a warning in in this case
+#     # this function just means we can call log(prob)
+#     # without worrying about the errors this can cause
+#     if(length(prob)==0){
+#       print(c(parent.frame()$i,parent.frame()$t,parent.frame()$Time))
+#       print(c("s",parent.frame()$current_state_index))
+#       print(c("t",parent.frame()$current_time))
+#       print(c("a",parent.frame()$current_age))
+#       print(parent.frame()$ch)
+#       View(parent.frame()$transitions)
+#     }
+#     if(prob<0){
+#       return(0)
+#     }else{
+#       return(ifelse(is.finite(log(prob)),log(prob),0)) 
+#     }
+#   }
+#   library(plyr, include.only = c("count"))
+#   # just need the count function from this package
+#   # to figure out how many unique chs there are
+#   uch <- count(ch) # unique number of capture histories
+#   # what are the states
+#   states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
+#   # number of columns of the chs minus is Time to account for the age column
+#   Time <- ncol(ch)-1
+#   Ages <- Time-1+max(ch[,ncol(ch)])
+#   # how many unique capture histories are there
+#   Individuals <- nrow(uch)
+#   # ll_i <- rep(0,Individuals) # want to create an individual likelihood for each capture history
+#   
+#   m <- array(0,dim=c(length(states),length(states),Time,Ages))
+#   v <- array(0,dim=c(length(states),Time,Ages))
+#   for(i in 1:Individuals){
+#     ch <- uch[i,1:(Time+1)] # the current capture history we are looking at
+#     transitions <- find.transitions(ch)
+#     for(j in 1:nrow(transitions)){
+#       r <- which(states==transitions[j,1])
+#       s <- which(states==transitions[j,2])
+#       t <- transitions[j,3]
+#       a <- transitions[j,5]
+#       if(length(s)==0){ # if length(s)==0 then s is not in states -> s=="0"
+#         v[r,t,a] <- v[r,t,a]+1
+#       }else if(r>0 & s>0){
+#         m[r,s,t,a] <- m[r,s,t,a]+1
+#       }
+#     } # end j for transitions
+#   } # end for individuals
+#   
+#   ll <- 0
+#   for(r in 1:length(states)){
+#     for(t in 1:Time){
+#       for(a in 1:Ages){
+#         for(s in 1:length(states)){
+#           if(m[r,s,t,a]>0){
+#             ll <- ll + m[r,s,t,a]*Indicator(Pr_rs(r,s,t,a,phi,psi))
+#           }
+#         }
+#         if(v[r,t,a]>0){
+#           ll <- v[r,t,a]*Indicator(Pr_r0(r,t,a,phi,psi))
+#         }
+#       }
+#     }
+#   }
+#   return(ll)
+# }
 
 # adding in iota to see if it can be estimated
 # make.psi2 <- function(delta,kap,rho,gam,epsilon,iota){

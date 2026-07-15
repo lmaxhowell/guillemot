@@ -672,13 +672,60 @@ write.csv(data.frame("par"=c("phi","delta","kappa","rho","gamma","epsilon"),
            "sd"=sqrt(diag(solve(-op$hessian)))),file="sim.data.values.cvs")
 write.csv(sim.dat,file="sim.data.csv")
 
+c(0.698928788723335, 0.298245382984611, 0.181118863947225, 0.495378763400676, 
+  0.845029324673158, 0.569502512055076) # rachels optim results
+
+ll.il(theta,1,2,3,4,5,6,struc,sim.dat)
+
+op <- optim(theta,ll.il,phi.ind=1,delt.ind=2,kap.ind=3,rho.ind=4,gam.ind=5,
+             eps.ind=6,struc=struc,ch=sim.dat,control=list(fnscale=-1),method="BFGS")
+op$convergence
+logistic(op$par)
+
 # delta is divorce rate
 # gamma is breeding success rate
-for(i in 1:nrow(sim.dat)){
-  if(sim.dat[i,]){
-    
-  }
-}
+# dr <- rep(0,nrow(sim.dat))
+# sr <- rep(0,nrow(sim.dat))
+# dr2 <- rep(0,nrow(sim.dat))
+# sr2 <- rep(0,nrow(sim.dat))
+# for(i in 1:nrow(sim.dat)){
+#   if(sum(ifelse(states[3:7] %in% sim.dat[i,],T,F))>0){ # if any of the breeding states are in the row
+#     wb1 <- Time-which(sim.dat[i,]=="B1")+2
+#     dr[i] <- length(which(sim.dat[i,] %in% c("L_B","L_B_")))/wb1
+#     sr[i] <- length(which(sim.dat[i,] %in% c("LB","L_B")))/wb1
+#     dr2[i] <- sum(sim.dat[i,] %in% states[c(5,7)])/sum(sim.dat[i,] %in% states[4:7])
+#     sr2[i] <- sum(sim.dat[i,] %in% states[4:5])/sum(sim.dat[i,] %in% states[4:7])
+#   }
+# }
+# mean(dr[dr!=0])
+# mean(sr[sr!=0])
 
 
+####################################################
+# Likelihood seems to now work...
+####################################################
+load("guill.sim.RData")
+df.true <- data.frame("par"=c("phi1","phi2","delta","kappa","rho","gamma","epsilon"),
+                      "MLE"=logistic(theta))
+ggplot(df.sim,aes(par,MLE,col=par)) + geom_boxplot() + geom_point(data=df.true,aes(par,MLE),shape=5,col="black")
 
+df.true2 <- data.frame("par"=c("phi","delta","kappa","rho","gamma","epsilon"),
+                      "MLE"=logistic(theta)[-1])
+ggplot(df.sim2,aes(par,MLE,col=par)) + geom_boxplot() + geom_point(data=df.true2,aes(par,MLE),shape=5,col="black")
+
+load("phi.sim.RData")
+ggplot(df.sim,aes(par,MLE,col=par)) + geom_boxplot() + 
+  geom_point(data=df.true,aes(par,MLE),shape=5,col="black") + facet_wrap(~ageclasses) +
+  scale_x_discrete(labels = c("phi1" = expression(phi[1]),
+                              "phi2" = expression(phi[2]),
+                              "phi3" = expression(phi[3]),
+                              "phi4" = expression(phi[4]),
+                              "phi5" = expression(phi[5]),
+                              "phi6" = expression(phi[6]),
+                              "phi7" = expression(phi[7]),
+                              "phi8" = expression(phi[8]),
+                              "delta" = expression(delta),
+                              "kappa" = expression(kappa),
+                              "rho" = expression(rho),
+                              "gamma" = expression(gamma),
+                              "epsilon" = expression(epsilon)))
