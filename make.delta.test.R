@@ -134,11 +134,11 @@ timer(op.null <- optim(theta.s(3),ll.il.null,
 
 aics <- c(2*length(theta.s(3))-2*op.null$value,
           sapply(Ages,function(x) 2*length(theta.s(4))-2*op.delt[[x]]$value))
-df.aic <- data.frame("AIC"=aics,
-                     "StepAge"=c(0,Ages),
-                     "convergence"=c(op.null$convergence,
-                                     sapply(Ages,function(x) op.delt[[x]]$convergence)),
-                     "DeltaAIC"=aics-min(aics))
+df.aic.delt <- data.frame("AIC"=aics,
+                          "StepAge"=c(0,Ages),
+                          "convergence"=c(op.null$convergence,
+                                          sapply(Ages,function(x) op.delt[[x]]$convergence)),
+                          "DeltaAIC"=aics-min(aics))
 selected <- which.min(aics)
 if(selected>1){ # its one with a step change in delta
   op.sel <- op.delt[[selected-1]] # minus one to reset which index of the list it is

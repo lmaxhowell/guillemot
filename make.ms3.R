@@ -26,10 +26,10 @@ if(l==1){
   
   rho.trans <- function(rho.input){
     rho <- array(0,dim=c(Time-1,Time,length(states)))
-    # rho[,1:2,] <- 0 # sets as default anyway
-    rho[,3,] <- rho.input[1]
-    rho[,4,] <- rho.input[2]
-    rho[,5:Time,] <- rho.input[3]
+    # rho[,1:2,] <- 0 # sets as default anyway # ages 0 and 1
+    rho[,3,] <- rho.input[1] # age two
+    rho[,4,] <- rho.input[2] # age 3
+    rho[,5:Time,] <- rho.input[3] # age 4+
     return(rho)
   }
   
@@ -120,18 +120,21 @@ if(l==1){
   AgeClasses <- 2:8
   cores <- length(AgeClasses)
   op <- mclapply(AgeClasses,function(x) optim(theta.s(x,FALSE),ll.il.ms,ageclasses=x,ch=ch,
-                                              control=list(fnscale=-1,maxit=15000),method="Nelder-Mead",hessian=TRUE),mc.cores=cores)
+                                              control=list(fnscale=-1,maxit=25000),method="Nelder-Mead",hessian=TRUE),mc.cores=cores)
   op.s <- mclapply(AgeClasses,function(x) optim(theta.s(x,TRUE),ll.il.ms.s,ageclasses=x,ch=ch,
-                                                control=list(fnscale=-1,maxit=15000),method="Nelder-Mead",hessian=TRUE),mc.cores=cores)
+                                                control=list(fnscale=-1,maxit=25000),method="Nelder-Mead",hessian=TRUE),mc.cores=cores)
   aics1 <- sapply(AgeClasses,function(x) 2*length(theta.s(x))-2*op[[x-1]]$value)
   aics2 <- sapply(AgeClasses,function(x) 2*length(theta.s(x))-2*op.s[[x-1]]$value)
   
   df.aic <- data.frame("aic"=c(aics1,aics2),
                        "AgeClasses"=rep(AgeClasses,2),
-                       "StateDependence"=rep(c(FALSE,TRUE),each=length(AgeClasses)))
+                       "StateDependence"=rep(c(FALSE,TRUE),each=length(AgeClasses)),
+                       "Convergence"=c(sapply(AgeClasses,function(x) op[[x-1]]$convergence),
+                                       sapply(AgeClasses,function(x) op.s[[x-1]]$convergence)))
+  
   par.name.fun <- function(ageclass,state.depen=FALSE){
     alphas <- paste0("alpha",(1:(ageclass-1))+1)
-    betas <- paste0("beta",1:Time)
+    betas <- paste0("beta",1:(Time-1))
     rhos <- paste0("rho",3:5)
     if(state.depen==TRUE){
       deltas <- paste0("delta",3:8)
@@ -147,6 +150,11 @@ if(l==1){
   names2 <- lapply(AgeClasses,par.name.fun,state.depen=TRUE)
   
   save(df.aic,op,op.s,file="ModelSelectionStorm.RData")
+  
+  par.fun <- function(op.par,ageclass){
+    output <- c(op.par[1:(Time+ageclass)],logistic(op.par[(Time+ageclass+1):length(op.par)]))
+    return(output)
+  }
   
   df.par <- data.frame("par"=c(unlist(names1),
                                unlist(names2)),

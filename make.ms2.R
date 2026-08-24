@@ -149,6 +149,7 @@ ggplot(df.pl,aes(fix,value)) + geom_line() + facet_wrap(~par,scales="free_x")
 ggplot(df.pl,aes(fix,value)) + geom_line() + facet_wrap(~par,scales="free") +
   geom_vline(data=df.op,aes(xintercept=fix),col="darkorange")
 
+load("ModelSelectionStorm.RData")
 # op.a <- mclapply(AgeClasses,function(x) optim(theta.s(x,FALSE),ll.il.ms,ageclasses=x,ch=ch,
 #                                             control=list(fnscale=-1,maxit=1000),method="Nelder-Mead",hessian=TRUE),mc.cores=cores)
 # op.a.s <- mclapply(AgeClasses,function(x) optim(theta.s(x,TRUE),ll.il.ms.s,ageclasses=x,ch=ch,

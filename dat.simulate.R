@@ -95,6 +95,7 @@ dat.simulate2 <- function(phi,delt,kap,rho,gam,eps,ni,seed=0){
       current.state <- 1 # they start in state "N"
       current.age <- ni[[tn]][i] # what age do they start at
       for(t in tn:(Time-1)){ # for every time point from now until the end of the study
+        # print(c(tn,t,i,current.age,current.state))
         # print(c(tn,t,i,current.age,current.state,phi[t,current.age,current.state]))
         survive <- rbinom(1,1,phi[t,current.age,current.state]) # do they survive
         if(survive==1){ # if they do survive
