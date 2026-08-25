@@ -241,3 +241,19 @@ df3 <- data.frame("par"=par.name,
                   "convergence"=rep(op8$convergence,length(par.name)))
 logistic(phi.trans(op8$par[1:3],op8$par[4:5],beta.struc)[10:11,1:4,1])
 
+
+load("guillemot2.RData")
+timer(op9 <- optim(start3,
+                   ll.il.ms,
+                   ageclasses=ageclasses,
+                   timeclasses=timeclasses,
+                   beta.struc=beta.struc,
+                   ch=ch3,
+                   control=list(maxit=10000)))
+
+df3 <- data.frame("par"=par.name,
+                  "mle"=logistic(op8$par),
+                  "convergence"=rep(op8$convergence,length(par.name)))
+logistic(phi.trans(op8$par[1:3],op8$par[4:5],beta.struc)[10:11,1:4,1])
+
+
