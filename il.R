@@ -850,8 +850,10 @@ make.psi <- function(delta,kap,rho,gam,epsilon){
   psi <- array(0,dim=c(length(states),length(states),Time,Ages))
   for(t in 1:Time){
     for(a in 1:Ages){
-      psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
-      psi[2,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
+      # psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
+      # psi[2,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
+      psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,1],(1-epsilon[t,a,1])*rho[t,a,1],0,0,0,0,0)
+      psi[2,,t,a] <- c((1-epsilon[t,a,2])*(1-rho[t,a,2]),epsilon[t,a,2],(1-epsilon[t,a,2])*rho[t,a,2],0,0,0,0,0)
       row.names(psi) <- states
       colnames(psi) <- states
       # this is if these rows depend on the ROWS theyre in
@@ -925,6 +927,10 @@ find.transitions <- function(ch){ # need to add in age as component
 }
 
 Pr_rs <- function(r,s,t,a,phi,psi){
+  # print(c("r",r))
+  # print(c("s",s))
+  # print(c("t",t))
+  # print(c("a",a))
   prob <- phi[t,a,r]*psi[r,s,t,a]
   return(prob)
 }
@@ -951,7 +957,8 @@ Pr_rs <- function(r,s,t,a,phi,psi){
 # }
 
 Chi <- function(r,t,a,phi,psi){
-  Time <- dim(phi)[1]
+  # print(c(r,t,a))
+  Time <- dim(phi)[1]+1
   if(t==Time){
     return(1)
   }else{
@@ -961,7 +968,42 @@ Chi <- function(r,t,a,phi,psi){
     #   n <- n+1
     # }
     # print(parent.frame(n)$v[r,t,a])
-    prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # if(r==1){
+    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # }else if(r==2){
+    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[2,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # }
+    prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[r,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # print(prob)
+    # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    if(length(prob)==0){
+      print(parent.frame(2)$ch)
+    }
+    return(prob)
+  }
+}
+
+Chi2 <- function(r,t,a,phi,psi){
+  # print(c(r,t,a))
+  Time <- dim(phi)[1]+1
+  if(t==Time){
+    return(1)
+  }else{
+    # print(c(r,t,a))
+    # n <- 1
+    # while(is.null(parent.frame(n)$v)){
+    #   n <- n+1
+    # }
+    # print(parent.frame(n)$v[r,t,a])
+    # if(r==1){
+    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # }else if(r==2){
+    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[2,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    # }
+    # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[r,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+    prob <- 1-phi[t,a,r] + phi[t,a,r]*sum(sapply(c(1,3:7),function(x) psi[r,x,t,a]*Chi(x,t+1,a+1,phi,psi)))
+    # print(prob)
+    # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
     if(length(prob)==0){
       print(parent.frame(2)$ch)
     }
@@ -1102,6 +1144,7 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
         # print(c(t,ll_i[i]))
       } # end for t in transitions
     } # end else ch has multiple observations
+    # print(i)
   } # end i
   # LL1 <- sum((uch$freq)*(L1))
   # LL2 <- sum((uch$freq)*(L2))

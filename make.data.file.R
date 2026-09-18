@@ -3,5 +3,7 @@ file.names <- file.names[-grep("^make",file.names)] # any non-function scripts s
 file.names <- file.names[-which(file.names %in% c("Main.R"))] # remove current file and Main (if different)
 lapply(file.names, source) # source all functions needed
 load("guillemot.RData")
+load("guillemot2.RData")
 print(sum(unlist(ni2)))
+print(sum(unlist(ni4)))
 save(list=ls(),file="gf.storm.RData")

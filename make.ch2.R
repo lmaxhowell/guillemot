@@ -1,8 +1,8 @@
-load("new_data.RData")
+load("new_data_AUK.RData")
 states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
-Time <- ncol(new_data)-1
+Time <- ncol(new_data_AUK)-1
 
-ch3 <- new_data[,1:16]
+ch3 <- new_data_AUK[,1:16]
 colnames(ch3) <- c(2010:2025)
 states_code <- c(1,13,"B1","LSB","DSB","LUB","DUB",13)
 
@@ -55,4 +55,7 @@ for(i in 1:length(ni3)){
   ni4[[i]] <- rep(1,ni3[i])
 }
 
-save(ch3,ni3,ni4,file="guillemot2.RData")
+ch4 <- ch3
+ch3 <- ch3[-c(250,289,367,391,602,69,483,124,386,415,169,128),]
+
+save(ch3,ch4,ni3,ni4,file="guillemot2.RData")

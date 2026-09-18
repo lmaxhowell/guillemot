@@ -237,13 +237,24 @@ timer(op8 <- optim(start3,
                    control=list(maxit=10000)))
 
 df3 <- data.frame("par"=par.name,
-                  "mle"=logistic(op8$par),
+                  "mle"=c(op8$par[1:5],logistic(op8$par[6:12])),
                   "convergence"=rep(op8$convergence,length(par.name)))
 logistic(phi.trans(op8$par[1:3],op8$par[4:5],beta.struc)[10:11,1:4,1])
 
 
 load("guillemot2.RData")
-timer(op9 <- optim(start3,
+tb2 <- table(unlist(ch3[,1:16]))
+
+Bs2 <- tb2["LB"] + tb2["L_B"]
+B_s2 <- tb2["LB_"] + tb2["L_B_"]
+Ls2 <- tb2["LB"] + tb2["LB_"]
+L_s2 <- tb2["L_B"] + tb2["L_B_"]
+
+gamm2 <- unname(Bs2/(Bs2+B_s2))
+del2 <- unname(L_s2/(Ls2+L_s2))
+
+start4 <- logit(c(rep(0.5,8),del2,0.5,gamm2,0.5))
+timer(op9 <- optim(start4,
                    ll.il.ms,
                    ageclasses=ageclasses,
                    timeclasses=timeclasses,
@@ -251,9 +262,14 @@ timer(op9 <- optim(start3,
                    ch=ch3,
                    control=list(maxit=10000)))
 
-df3 <- data.frame("par"=par.name,
-                  "mle"=logistic(op8$par),
-                  "convergence"=rep(op8$convergence,length(par.name)))
-logistic(phi.trans(op8$par[1:3],op8$par[4:5],beta.struc)[10:11,1:4,1])
+df4 <- data.frame("par"=par.name,
+                  "mle"=c(op9$par[1:5],logistic(op9$par[6:12])),
+                  "convergence"=rep(op9$convergence,length(par.name)))
+logistic(phi.trans(op9$par[1:3],op9$par[4:5],beta.struc)[10:11,1:4,1])
 
+
+
+
+
+save(list=ls(),file="it.works.backup.RData")
 
