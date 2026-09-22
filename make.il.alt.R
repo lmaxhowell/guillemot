@@ -81,7 +81,7 @@ il.alt <- function(phi,psi,mv){
   return(as.numeric(ll))
 }
 
-ll.il.alt <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,mv){
+ll.il.alt <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,p.ind,struc,mv){
   states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
   
   phi <- untrans(logistic(theta[phi.ind]),struc$phi$age,struc$phi$time,struc$phi$state)
@@ -90,8 +90,9 @@ ll.il.alt <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,str
   rho <- untrans(logistic(theta[rho.ind]),struc$rho$age,struc$rho$time,struc$rho$state)
   gam <- untrans(logistic(theta[gam.ind]),struc$gam$age,struc$gam$time,struc$gam$state)
   eps <- untrans(logistic(theta[eps.ind]),struc$eps$age,struc$eps$time,struc$eps$state)
+  p <- untrans(logistic(theta[p.ind]),struc$p$age,struc$p$time,struc$p$state)
   
-  psi <- make.psi(delt,kap,rho,gam,eps)
+  psi <- make.psi(delt,kap,rho,gam,eps,p)
   # print(psi)
   
   ll <- il.alt(phi,psi,mv)
@@ -148,8 +149,9 @@ ll.il.alt2 <- function(theta,ageclasses,timeclasses,beta.struc,mv){
   kap <- untrans(logistic(theta[2]),struc.const$age,struc.const$time,struc.const$state)
   gam <- untrans(logistic(theta[3]),struc.const$age,struc.const$time,struc.const$state)
   eps <- untrans(logistic(theta[4]),struc.const$age,struc.const$time,struc.const$state)
+  p <- untrans(logistic(theta[5]),struc.const$age,struc.const$time,struc.const$state)
 
-  psi <- make.psi(delt,kap,rho,gam,eps)
+  psi <- make.psi(delt,kap,rho,gam,eps,p)
 
   ll <- il.alt(phi,psi,mv)
   

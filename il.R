@@ -838,7 +838,60 @@
 ##############################
 # Changing things to add our immigration/emigration parameter
 ##############################
-make.psi <- function(delta,kap,rho,gam,epsilon){
+# make.psi <- function(delta,kap,rho,gam,epsilon){
+#   states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
+#   # all five input arrays should be indexed by [time,age,state]
+#   Time <- dim(delta)[1]
+#   Ages <- dim(delta)[2]
+#   # print(sapply(list(delta,kap,rho,gam,epsilon),ncol))
+#   if(nrow(kap)!=Time | nrow(rho)!=Time | nrow(gam)!=Time | nrow(epsilon)!=Time){
+#     stop("delta,kappa,rho, gamma and epsilon must all have the same number of rows, corresponding to time")
+#   }
+#   psi <- array(0,dim=c(length(states),length(states),Time,Ages))
+#   for(t in 1:Time){
+#     for(a in 1:Ages){
+#       # psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
+#       # psi[2,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
+#       psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,1],(1-epsilon[t,a,1])*rho[t,a,1],0,0,0,0,0)
+#       psi[2,,t,a] <- c((1-epsilon[t,a,2])*(1-rho[t,a,2]),epsilon[t,a,2],(1-epsilon[t,a,2])*rho[t,a,2],0,0,0,0,0)
+#       row.names(psi) <- states
+#       colnames(psi) <- states
+#       # this is if these rows depend on the ROWS theyre in
+#       for(i in 4:8){
+#         psi[i-1,,t,a] <- c(0,0,0,
+#                            (1-kap[t,a,i])*(1-delta[t,a,i])*gam[t,a,i],
+#                            (1-kap[t,a,i])*delta[t,a,i]*gam[t,a,i],
+#                            (1-kap[t,a,i])*(1-delta[t,a,i])*(1-gam[t,a,i]),
+#                            (1-kap[t,a,i])*delta[t,a,i]*(1-gam[t,a,i]),
+#                            kap[t,a,i])
+#       }
+#       psi[8,,t,a] <- c(0,0,0,
+#                        (1-delta[t,a,8])*gam[t,a,8],
+#                        delta[t,a,8]*gam[t,a,8],
+#                        (1-delta[t,a,8])*(1-gam[t,a,8]),
+#                        delta[t,a,8]*(1-gam[t,a,8]),
+#                        0)
+#       # # this is if these rows depend on the columns theyre in
+#       # for(i in 4:8){
+#       #   psi[i-1,,t,a] <- c(0,0,0,
+#       #                      (1-kap[t,a,4])*(1-delta[t,a,4])*gam[t,a,4],
+#       #                      (1-kap[t,a,5])*delta[t,a,5]*gam[t,a,5],
+#       #                      (1-kap[t,a,6])*(1-delta[t,a,6])*(1-gam[t,a,6]),
+#       #                      (1-kap[t,a,7])*delta[t,a,7]*(1-gam[t,a,7]),
+#       #                      kap[t,a,8])
+#       # }
+#       # psi[8,,t,a] <- c(0,0,0,
+#       #                  (1-delta[t,a,4])*gam[t,a,4],
+#       #                  delta[t,a,5]*gam[t,a,5],
+#       #                  (1-delta[t,a,6])*(1-gam[t,a,6]),
+#       #                  delta[t,a,7]*(1-gam[t,a,7]),
+#       #                  0)
+#     }
+#   }
+#   return(psi)
+# }
+
+make.psi <- function(delta,kap,rho,gam,epsilon,p){
   states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
   # all five input arrays should be indexed by [time,age,state]
   Time <- dim(delta)[1]
@@ -852,8 +905,8 @@ make.psi <- function(delta,kap,rho,gam,epsilon){
     for(a in 1:Ages){
       # psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
       # psi[2,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,2],(1-epsilon[t,a,3])*rho[t,a,3],0,0,0,0,0)
-      psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1]),epsilon[t,a,1],(1-epsilon[t,a,1])*rho[t,a,1],0,0,0,0,0)
-      psi[2,,t,a] <- c((1-epsilon[t,a,2])*(1-rho[t,a,2]),epsilon[t,a,2],(1-epsilon[t,a,2])*rho[t,a,2],0,0,0,0,0)
+      psi[1,,t,a] <- c((1-epsilon[t,a,1])*(1-rho[t,a,1])*p[t,a,1],epsilon[t,a,1] + (1-epsilon[t,a,1])*(1-p[t,a,1]),(1-epsilon[t,a,1])*rho[t,a,1]*p[t,a,1],0,0,0,0,0)
+      psi[2,,t,a] <- c((1-epsilon[t,a,2])*(1-rho[t,a,2])*p[t,a,2],epsilon[t,a,2] + (1-epsilon[t,a,2])*(1-p[t,a,2]),(1-epsilon[t,a,2])*rho[t,a,2]*p[t,a,2],0,0,0,0,0)
       row.names(psi) <- states
       colnames(psi) <- states
       # this is if these rows depend on the ROWS theyre in
@@ -983,33 +1036,33 @@ Chi <- function(r,t,a,phi,psi){
   }
 }
 
-Chi2 <- function(r,t,a,phi,psi){
-  # print(c(r,t,a))
-  Time <- dim(phi)[1]+1
-  if(t==Time){
-    return(1)
-  }else{
-    # print(c(r,t,a))
-    # n <- 1
-    # while(is.null(parent.frame(n)$v)){
-    #   n <- n+1
-    # }
-    # print(parent.frame(n)$v[r,t,a])
-    # if(r==1){
-    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
-    # }else if(r==2){
-    #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[2,2,t,a]*Chi(2,t+1,a+1,phi,psi)
-    # }
-    # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[r,2,t,a]*Chi(2,t+1,a+1,phi,psi)
-    prob <- 1-phi[t,a,r] + phi[t,a,r]*sum(sapply(c(1,3:7),function(x) psi[r,x,t,a]*Chi(x,t+1,a+1,phi,psi)))
-    # print(prob)
-    # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
-    if(length(prob)==0){
-      print(parent.frame(2)$ch)
-    }
-    return(prob)
-  }
-}
+# Chi2 <- function(r,t,a,phi,psi){
+#   # print(c(r,t,a))
+#   Time <- dim(phi)[1]+1
+#   if(t==Time){
+#     return(1)
+#   }else{
+#     # print(c(r,t,a))
+#     # n <- 1
+#     # while(is.null(parent.frame(n)$v)){
+#     #   n <- n+1
+#     # }
+#     # print(parent.frame(n)$v[r,t,a])
+#     # if(r==1){
+#     #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+#     # }else if(r==2){
+#     #   prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[2,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+#     # }
+#     # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[r,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+#     prob <- 1-phi[t,a,r] + phi[t,a,r]*sum(sapply(c(1,3:7),function(x) psi[r,x,t,a]*Chi(x,t+1,a+1,phi,psi)))
+#     # print(prob)
+#     # prob <- 1-phi[t,a,r] + phi[t,a,r]*psi[1,2,t,a]*Chi(2,t+1,a+1,phi,psi)
+#     if(length(prob)==0){
+#       print(parent.frame(2)$ch)
+#     }
+#     return(prob)
+#   }
+# }
 
 Pr_r0 <- function(r,t,a,phi,psi){
   skip <- which(row.names(psi)=="S")
@@ -1155,7 +1208,7 @@ il <- function(ch,phi,psi){ # il is "individual likelihood"
   # return(c(ll,LL1,LL2,LL1+LL2))
 }
 
-ll.il <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,ch){
+ll.il <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,p.ind,struc,ch){
   states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
   
   phi <- untrans(logistic(theta[phi.ind]),struc$phi$age,struc$phi$time,struc$phi$state)
@@ -1164,8 +1217,9 @@ ll.il <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,struc,c
   rho <- untrans(logistic(theta[rho.ind]),struc$rho$age,struc$rho$time,struc$rho$state)
   gam <- untrans(logistic(theta[gam.ind]),struc$gam$age,struc$gam$time,struc$gam$state)
   eps <- untrans(logistic(theta[eps.ind]),struc$eps$age,struc$eps$time,struc$eps$state)
+  p <- untrans(logistic(theta[p.ind]),struc$p$age,struc$p$time,struc$p$state)
   
-  psi <- make.psi(delt,kap,rho,gam,eps)
+  psi <- make.psi(delt,kap,rho,gam,eps,p)
   # print(psi)
   
   ll <- il(ch,phi,psi)
