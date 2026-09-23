@@ -67,3 +67,96 @@ op3$convergence
 data.frame("par"=c(paste0("alpha",1:3),paste0("beta",12:13),paste0("rho",c(23,4,5)),"delta","kappa","gamma","epsilon","p"),
            "mle"=c(op3$par[1:5],logistic(op3$par[6:13])))
 logistic(phi.trans(op3$par[1:3],op3$par[4:5],list(1:12,13:15))[12:13,1:4,1])
+
+
+##################################################################
+# trying some simulated data
+##################################################################
+
+source("dat.simulate.R")
+dat <- dat.sim.wrap(rep(0,7),1,2,3,4,5,6,7,struc,ni4[1:15],798465132)
+
+mv.sim <- suff.stat(dat)
+
+op4 <- optim( rep(0,7),
+             ll.il.alt,
+             phi.ind=1,
+             delt.ind=2,
+             kap.ind=3,
+             rho.ind=4,
+             gam.ind=5,
+             eps.ind=6,
+             p.ind=7,
+             struc=struc,
+             mv=mv.sim,
+             control=list(maxit=10000,fnscale=-1))
+op4$convergence
+data.frame("par"=c("phi","delta","kappa","rho","gamma","epsilon","p"),"mle"=logistic(op4$par))
+
+set.seed(798465132)
+n <- 50
+cores <- 2
+seeds <- sample(1:.Machine$integer.max,n)
+
+dat2 <- lapply(seeds,function(x) dat.sim.wrap(rep(0,7),1,2,3,4,5,6,7,struc,ni4[1:15],x))
+mv.sim2 <- lapply(1:n,function(x) suff.stat(dat2[[x]]))
+library(parallel)
+op5 <- mclapply(1:n,function(x) optim(rep(0,7),
+                                      ll.il.alt,
+                                      phi.ind=1,
+                                      delt.ind=2,
+                                      kap.ind=3,
+                                      rho.ind=4,
+                                      gam.ind=5,
+                                      eps.ind=6,
+                                      p.ind=7,
+                                      struc=struc,
+                                      mv=mv.sim2[[x]],
+                                      control=list(maxit=10000,fnscale=-1)),mc.cores=cores)
+
+sapply(1:n,function(x)op5[[x]]$convergence)
+
+df <- data.frame("par"=rep(c("phi","delta","kappa","rho","gamma","epsilon","p"),n),
+                 "mle"=unlist(lapply(1:n,function(x) logistic(op5[[x]]$par))))
+library(ggplot2)
+ggplot(df,aes(par,mle)) + geom_boxplot() + theme_bw()
+
+dat3 <- lapply(seeds,function(x) dat.sim.wrap3(rep(0,7),1,2,3,4,5,6,7,struc,ni4[1:15],x))
+mv.sim3 <- lapply(1:n,function(x) suff.stat(dat3[[x]]))
+timer(op6 <- mclapply(1:n,function(x) optim(rep(0,7),
+                                      ll.il.alt,
+                                      phi.ind=1,
+                                      delt.ind=2,
+                                      kap.ind=3,
+                                      rho.ind=4,
+                                      gam.ind=5,
+                                      eps.ind=6,
+                                      p.ind=7,
+                                      struc=struc,
+                                      mv=mv.sim3[[x]],
+                                      control=list(maxit=10000,fnscale=-1)),mc.cores=cores))
+
+sapply(1:n,function(x)op6[[x]]$convergence)
+
+df2 <- data.frame("par"=rep(c("phi","delta","kappa","rho","gamma","epsilon","p"),n),
+                  "mle"=unlist(lapply(1:n,function(x) logistic(op6[[x]]$par))))
+ggplot(df2,aes(par,mle)) + geom_boxplot() + theme_bw()
+
+mean(df2$mle[df2$par=="phi"])
+
+# weird observation likelihood attempt
+ll.il.alt(rep(0,7),1,2,3,4,5,6,7,struc,mv3)
+op7 <- optim( rep(0,7),
+              ll.il.alt,
+              phi.ind=1,
+              delt.ind=2,
+              kap.ind=3,
+              rho.ind=4,
+              gam.ind=5,
+              eps.ind=6,
+              p.ind=7,
+              struc=struc,
+              mv=mv3,
+              control=list(maxit=10000,fnscale=-1))
+op7$convergence
+logistic(op7$par)

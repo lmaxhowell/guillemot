@@ -157,3 +157,119 @@ ll.il.alt2 <- function(theta,ageclasses,timeclasses,beta.struc,mv){
   
   return(ll)
 }
+
+il.alt <- function(phi,psi,prob.observe,mv){
+  Indicator <- function(prob){
+    # a function that checks if the probability pu into it will
+    # "cause problems" in the likelihood - i.e. if we log
+    # this probability will it be infinite and cause the whole ll
+    # to be infinite as a result
+    # or has a small amount of numerical error crept in
+    # and made a probability negative?
+    # in which case just set it to zero
+    # will add a warning in in this case
+    # this function just means we can call log(prob)
+    # without worrying about the errors this can cause
+    if(length(prob)==0){
+      print(c(parent.frame()$i,parent.frame()$t,parent.frame()$Time))
+      print(c("r",parent.frame()$current_state_index))
+      print(c("s",parent.frame()$next_state_index))
+      print(c("t",parent.frame()$current_time))
+      print(c("a",parent.frame()$current_age))
+      print(parent.frame()$ch)
+      View(parent.frame()$transitions)
+    }
+    if(!exists("prob") | is.na(prob)){
+      print(parent.frame()$ch)
+      print(parent.frame()$transitions)
+    }
+    if(prob<0){
+      return(0)
+    }else{
+      return(ifelse(is.finite(log(prob)),log(prob),0)) 
+    }
+  }
+  states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
+  m <- mv$m
+  v <- mv$v
+  Time <- dim(mv$m)[3]
+  Age <- Time
+  
+  if(is.null(unlist(mv$violations))==FALSE){
+    warning("some transitions not allowed")
+  }
+  
+  probs.m <- array(0,dim=dim(m)) # r,s,t,a
+  probs.v <- array(0,dim=dim(v)) # r,t,a
+  
+  skip <- which(row.names(psi)=="S")
+  for(r in 1:length(states)){
+    for(t in 1:Time){
+      for(a in 1:Age){
+        for(s in 1:length(states)){
+          if(m[r,s,t,a]>0){
+            probs.m[r,s,t,a] <- log(phi[t,a,r]*psi[r,s,t,a])
+          }
+        }
+        if(r %in% 1:2){
+          if(v[r,t,a]>0){
+            # print(c(r,t,a))
+            probs.v[r,t,a] <- log(Chi(r,t,a,phi,psi))
+          }
+        }else if(r %in% 3:7){
+          if(t<(Time-1)){
+            if(v[r,t,a]>0){
+              # print(c(r,t,a))
+              probs.v[r,t,a] <- log(phi[t,a,r]*psi[r,skip,t,a]*(1-phi[t+1,a+1,skip]) + (1-phi[t,a,r]))
+            }
+          }else if(t==(Time-1)){
+            # if we are in a breeding state at Time-1 and then a zero at Time
+            # then they dont have to have died they could still be in the skipping state
+            # with no information about them being alive
+            if(v[r,t,a]>0){
+              # print(c(r,t,a))
+              probs.v[r,t,a] <- log((phi[t,a,r]*psi[r,skip,t,a] + (1-phi[t,a,r]))*(prob.observe[t,a,r]))
+            }
+          }
+        }
+      }
+    }
+  }
+  ll <- probs.m%*%m + probs.v%*%v
+  return(as.numeric(ll))
+}
+ll.il.alt <- function(theta,phi.ind,delt.ind,kap.ind,rho.ind,gam.ind,eps.ind,p.ind,struc,mv){
+  states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
+  
+  phi <- untrans(logistic(theta[phi.ind]),struc$phi$age,struc$phi$time,struc$phi$state)
+  delt <- untrans(logistic(theta[delt.ind]),struc$delt$age,struc$delt$time,struc$delt$state)
+  kap <- untrans(logistic(theta[kap.ind]),struc$kap$age,struc$kap$time,struc$kap$state)
+  rho <- untrans(logistic(theta[rho.ind]),struc$rho$age,struc$rho$time,struc$rho$state)
+  gam <- untrans(logistic(theta[gam.ind]),struc$gam$age,struc$gam$time,struc$gam$state)
+  eps <- untrans(logistic(theta[eps.ind]),struc$eps$age,struc$eps$time,struc$eps$state)
+  p <- untrans(logistic(theta[p.ind]),struc$p$age,struc$p$time,struc$p$state)
+  
+  psi <- make.psi(delt,kap,rho,gam,eps,p)
+  prob.observe <- make.observe(phi,kap,eps,p)
+  # print(psi)
+  
+  ll <- il.alt(phi,psi,prob.observe,mv)
+  
+  return(ll)
+}
+
+make.observe <- function(phi,kappa,epsilon,p){
+  prob <- array(1,dim=c(Time-1,Time,length(states)))
+  for(t in 1:(Time-1)){
+    for(a in 1:Time){
+      prob[t,a,1] <- (1-phi[t,a,1]) + phi[t,a,1]*epsilon[t,a,1] + phi[t,a,1]*(1-p[t,a,1])
+      prob[t,a,2] <- 0
+      for(r in 3:7){
+        prob[t,a,r] <- (1-phi[t,a,r]) + phi[t,a,r]*kappa[t,a,r]
+      }
+      prob[t,a,8] <- 0
+    }
+  }
+  return(prob)
+}
+
