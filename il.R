@@ -857,8 +857,8 @@ make.psi <- function(delta,kap,rho,gam,epsilon){
       row.names(psi) <- states
       colnames(psi) <- states
       # this is if these rows depend on the ROWS theyre in
-      for(i in 4:8){
-        psi[i-1,,t,a] <- c(0,0,0,
+      for(i in 3:7){
+        psi[i,,t,a] <- c(0,0,0,
                            (1-kap[t,a,i])*(1-delta[t,a,i])*gam[t,a,i],
                            (1-kap[t,a,i])*delta[t,a,i]*gam[t,a,i],
                            (1-kap[t,a,i])*(1-delta[t,a,i])*(1-gam[t,a,i]),

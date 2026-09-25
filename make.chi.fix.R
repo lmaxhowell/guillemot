@@ -1,6 +1,8 @@
 load("gf.storm.RData")
 source("make.il.alt.R")
 
+Time <- ncol(ch3)-1
+states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
 struc <- list("phi"=list("age"=list(1,2,3,4:Time),"time"=list(1:(Time-1)),"state"=list(1:length(states))),
               "delt"=list("age"=list(1:Time),"time"=list(1:(Time-1)),"state"=list(1:length(states))),
               "kap"=list("age"=list(1:Time),"time"=list(1:(Time-1)),"state"=list(1:length(states))),
