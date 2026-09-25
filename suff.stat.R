@@ -42,7 +42,7 @@ suff.stat <- function(ch){
         r <- which(states==ch[i,wh[j]])
         s <- which(states==ch[i,wh[j+1]])
         t <- wh[j]
-        a <- Agesi[i]+t-1
+        a <- Agesi[i]+t-wh[1]
         if(s %in% 1:2){
           tprime <- wh[j+1]
           mN[s,t,a,tprime] <- mN[s,t,a,tprime] + 1
