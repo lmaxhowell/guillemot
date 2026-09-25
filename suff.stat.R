@@ -1,6 +1,7 @@
 suff.stat <- function(ch){
-  states <- c("N","E","B1","LB","L_B","LB_","L_B_","S")
+  states <- c("N","B1","LB","L_B","LB_","L_B_","S")
   Time <- ncol(ch)-1
+  B <- states[-1]
   
   Agesi <- ch[,ncol(ch)]
   ch <- ch[,-ncol(ch)]
@@ -9,7 +10,8 @@ suff.stat <- function(ch){
   
   # m is r->s
   # v is r->0
-  m <- array(0,dim=c(length(states),length(states),Time,Age)) # r,s,t,a
+  mB <- array(0,dim=c(length(states),length(states),Time,Age)) # r,s,t,a
+  mN <- array(0,dim=c(2,Time,Age,Time)) # s,t,a,t' # 2 rather than length states because those are the only states N can go to
   v <- array(0,dim=c(length(states),Time,Age)) # r,t,a
   
   violations <- list(vector(mode = "list", length = 8),
@@ -39,23 +41,35 @@ suff.stat <- function(ch){
       for(j in 1:(length(wh)-1)){
         r <- which(states==ch[i,wh[j]])
         s <- which(states==ch[i,wh[j+1]])
-        # if((j+Agesi[i]-1)==0){
-        #   print(c(i,j))
-        # }
-        m[r,s,wh[j],j+Agesi[i]-1] <- m[r,s,wh[j],j+Agesi[i]-1] + 1
+        t <- wh[j]
+        a <- Agesi[i]+t-1
+        if(s %in% 1:2){
+          tprime <- wh[j+1]
+          mN[s,t,a,tprime] <- mN[s,t,a,tprime] + 1
+        }else{
+          mB[r,s,t,a] <- mB[r,s,t,a] + 1
+        }
+
         if(isitavio(r,s)){
           print(c(r,s))
           violations[[r]][[s]] <- append(violations[[r]][[s]],i)
         }
       }
       r <- which(states==ch[i,wh[length(wh)]])
-      v[r,wh[length(wh)],length(wh)+Agesi[i]-1] <- v[r,wh[length(wh)],length(wh)+Agesi[i]-1] + 1
+      v[r,wh[length(wh)],wh[length(wh)]+Agesi[i]-1] <- v[r,wh[length(wh)],wh[length(wh)]+Agesi[i]-1] + 1
     }
   }
-  m2 <- rowSums(m,dims = 2)
+  mB2 <- rowSums(mB,dims = 2)
   dimnames(m2) <- list(states,states)
   v2 <- rowSums(v,dims = 1)
   names(v2) <- states
   
-  return(list("m"=m,"v"=v,"m2"=m2,"v2"=v2,"violations"=violations))
+  mN2 <- array(0,dim=c(2,Time)) # s,t'
+  for(i in 1:dim(mN)[2]){
+    for(j in 1:dim(mN)[3]){
+      mN2 <- mN2 + mN[,i,j,]
+    }
+  }
+  
+  return(list("mB"=mB,"mN"=mN,"v"=v,"mB2"=mB2,"mN2"=mN2,"v2"=v2,"violations"=violations))
 }
