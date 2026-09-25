@@ -60,7 +60,7 @@ suff.stat <- function(ch){
     }
   }
   mB2 <- rowSums(mB,dims = 2)
-  dimnames(m2) <- list(states,states)
+  dimnames(mB2) <- list(states,states)
   v2 <- rowSums(v,dims = 1)
   names(v2) <- states
   
